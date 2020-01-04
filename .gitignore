@@ -18,5 +18,4 @@ jspm_packages/
 # Optional npm cache directory
 .npm
 
-config-me.js
-config.js
+.env.json.me

@@ -2,7 +2,7 @@
   "name": "memories",
   "version": "1.0.0",
   "description": "periodic notifications that deliver notes from the past",
-  "main": "lib/app.js",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -17,7 +17,12 @@
   },
   "homepage": "https://github.com/gtracy/memories#readme",
   "dependencies": {
-    "express": "^4.16.2",
-    "twilio": "^3.11.0"
+    "async": "^3.1.0",
+    "dotenv-json": "^1.0.0",
+    "googleapis": "^46.0.0",
+    "twilio": "^3.35.1"
+  },
+  "devDependencies": {
+    "claudia": "^5.11.0"
   }
 }
