@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/gtracy/memories#readme",
   "dependencies": {
-    "async": "^3.1.0",
+    "async": "^3.2.2",
     "dotenv-json": "^1.0.0",
     "googleapis": "^84.0.0",
     "twilio": "^3.35.1"
