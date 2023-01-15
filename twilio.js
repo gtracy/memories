@@ -1,15 +1,20 @@
 var twilio = require('twilio');
 
-module.exports.sendSMS = async function(msg,recipient,callback) {
+module.exports.sendSMS = async function(msg,recipient,media_url) {
 
     try {
-        var client = new twilio(process.env.TWILIO_SID,process.env.TWILIO_TOKEN);
-        const message = await client.messages.create({
+        const client = new twilio(process.env.TWILIO_SID,process.env.TWILIO_TOKEN);
+        let msg_obj = {
             body: msg,
             to: recipient,
-            from: process.env.TWILIO_NUMBER
-        });
-        return message.sid;
+            from: process.env.TWILIO_NUMBER,
+        }
+        if( media_url ) {
+            msg_obj.mediaUrl = [media_url];
+        }
+
+        const message = await client.messages.create(msg_obj);
+        return message;
     } catch (e) {
         throw e;
     }
