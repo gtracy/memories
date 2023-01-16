@@ -41,6 +41,7 @@ exports.handler = async (sheet_row, event, context) => {
     // fetch the memory dates from the sheet
     console.log('ok, ready. go get the data sheet');
     let date_rows;
+    let message_data;
     try {
         const data = await google.getSheetData(process.env.GOOGLE_SHEET_ID, process.env.GOOGLE_SHEET_RANGE);
         // find all of the rows with a matching date unless a specific row was specified
@@ -49,16 +50,16 @@ exports.handler = async (sheet_row, event, context) => {
         } else{
             date_rows = queryDates(data);
         }
-        console.dir('Query rows for matchind date : ' + date_rows);
+        console.dir('Query rows for matchind date : ' + JSON.stringify(date_rows));
+
+        // re-fetch a random message for this date
+        const picker = Math.floor(Math.random() * date_rows.length);
+        const cell = "Form Responses 1!A" + date_rows[picker] + ":C" + date_rows[picker];
+        message_data = await google.getSheetData(process.env.GOOGLE_SHEET_ID, cell);
+        console.dir(message_data);
     } catch (e) {
         console.error(e);
     }
-
-    // re-fetch a random message for this date
-    const picker = Math.floor(Math.random() * date_rows.length);
-    const cell = "Form Responses 1!A" + date_rows[picker] + ":C" + date_rows[picker];
-    const message_data = await google.getSheetData(process.env.GOOGLE_SHEET_ID, cell);
-    console.dir(message_data);
 
     // assemble the message details
     const message = message_data[0][1];

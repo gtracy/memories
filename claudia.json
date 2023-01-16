@@ -1,7 +1,0 @@
-{
-  "lambda": {
-    "role": "memories-executor",
-    "name": "memories",
-    "region": "us-east-2"
-  }
-}
