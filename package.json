@@ -20,7 +20,7 @@
     "async": "^3.1.0",
     "dotenv-json": "^1.0.0",
     "googleapis": "^84.0.0",
-    "twilio": "^3.35.1"
+    "twilio": "^3.84.1"
   },
   "devDependencies": {
     "claudia": "^5.11.0"
