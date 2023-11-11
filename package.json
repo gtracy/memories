@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/gtracy/memories#readme",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.449.0",
+    "@aws-sdk/s3-request-presigner": "^3.449.0",
     "async": "^3.1.0",
     "dotenv-json": "^1.0.0",
     "googleapis": "^84.0.0",
