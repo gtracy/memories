@@ -1,6 +1,7 @@
 'use strict';
 
 require('dotenv-json')();
+const createPresignedUrl = require('./s3');
 const async = require('async');
 
 const twilioClient = require('./twilio');
@@ -67,14 +68,13 @@ exports.handler = async (sheet_row, event, context) => {
     const sms = year + " : " + message;
     console.dir('message -> ' + sms);
 
-    // determine if there is media to include. if so, we have to transform the 
-    // link found in the sheet to be a link with the appropriate image content type
-    // Example sheet link: https://drive.google.com/open?id=1ch51tiEYBdALwwmwUpSznmuVF47hUIqn
-    // Example transformation: https://drive.google.com/uc?export=view&id=1ch51tiEYBdALwwmwUpSznmuVF47hUIqn
-    const media = message_data[0][2];
     let media_url = undefined;
-    if( media ) {
-        media_url = "https://drive.google.com/uc?export=view&id=" + media.split('id=')[1];
+    if( message_data[0][2] ) {
+        // example: https://memories-photo-archive.s3.us-east-2.amazonaws.com/2023-november-9.jpg
+        const media_cell = message_data[0][2];
+        const objectKey = media_cell.substring(media_cell.lastIndexOf('/') + 1);
+        console.log('objectKey -> ' + objectKey);
+        media_url = await createPresignedUrl(objectKey);
     }
     console.log('media -> ' + media_url);
 
