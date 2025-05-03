@@ -7,4 +7,6 @@ const app = require('./app');
 //    > node app.local.js 733
 //
 const args = process.argv.slice(2);
-app.handler(args[0]);
+// If no arguments are provided, default to 2720
+const date = args[0] || 2720;
+app.handler(date);
