@@ -25,7 +25,6 @@
     "twilio": "^5.5.2"
   },
   "devDependencies": {
-    "claudia": "^5.11.0",
     "mock-require": "^3.0.3",
     "vitest": "^4.0.18"
   }
