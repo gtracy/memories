@@ -51,7 +51,7 @@ exports.handler = async (sheet_row, event, context) => {
         } else{
             date_rows = queryDates(data);
         }
-        console.dir('Query rows for matchind date : ' + JSON.stringify(date_rows));
+        console.dir('Query rows for matching date : ' + JSON.stringify(date_rows));
 
         // re-fetch a random message for this date
         const picker = Math.floor(Math.random() * date_rows.length);

@@ -21,3 +21,5 @@ jspm_packages/
 .env.json.me
 creds.json.me
 function.zip
+.env.json
+creds.json
