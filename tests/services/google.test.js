@@ -27,6 +27,7 @@ const mockGoogleApis = {
 };
 
 mock('googleapis', mockGoogleApis);
+mock('dotenv-json', () => { }); // Mock dotenv-json
 
 const Google = require('../../google');
 

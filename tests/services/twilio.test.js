@@ -12,6 +12,7 @@ const mockClient = {
 const mockTwilioConstructor = vi.fn(() => mockClient);
 
 // Register mock
+mock('dotenv-json', () => { });
 mock('twilio', mockTwilioConstructor);
 
 // Require the service (this will use the mock)

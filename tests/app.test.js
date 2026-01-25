@@ -23,6 +23,7 @@ const mockTwilioService = {
 };
 
 // Use require.resolve for absolute paths to ensure mock-require matches them
+mock('dotenv-json', () => { });
 mock(require.resolve('../google'), mockGoogleClass);
 mock(require.resolve('../twilio'), mockTwilioService);
 mock(require.resolve('../s3'), mockCreatePresignedUrl);

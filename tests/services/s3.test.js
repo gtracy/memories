@@ -10,6 +10,7 @@ const getSignedUrl = vi.fn();
 
 mock('@aws-sdk/client-s3', { S3Client, GetObjectCommand });
 mock('@aws-sdk/s3-request-presigner', { getSignedUrl });
+mock('dotenv-json', () => { });
 
 const createPresignedUrl = require('../../s3');
 
