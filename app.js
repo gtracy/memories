@@ -1,6 +1,10 @@
 'use strict';
 
-require('dotenv-json')();
+try {
+    require('dotenv-json')();
+} catch (e) {
+    // do nothing
+}
 const createPresignedUrl = require('./s3');
 const async = require('async');
 
@@ -46,9 +50,9 @@ exports.handler = async (sheet_row, event, context) => {
     try {
         const data = await google.getSheetData(process.env.GOOGLE_SHEET_ID, process.env.GOOGLE_SHEET_RANGE);
         // find all of the rows with a matching date unless a specific row was specified
-        if( sheet_row ) {
+        if (sheet_row) {
             date_rows = [sheet_row];
-        } else{
+        } else {
             date_rows = queryDates(data);
         }
         console.dir('Query rows for matching date : ' + JSON.stringify(date_rows));
@@ -69,7 +73,7 @@ exports.handler = async (sheet_row, event, context) => {
     console.dir('message -> ' + sms);
 
     let media_url = undefined;
-    if( message_data[0][2] ) {
+    if (message_data[0][2]) {
         // example: https://memories-photo-archive.s3.us-east-2.amazonaws.com/2023-november-9.jpg
         const media_cell = message_data[0][2];
         const objectKey = media_cell.substring(media_cell.lastIndexOf('/') + 1);
@@ -82,7 +86,7 @@ exports.handler = async (sheet_row, event, context) => {
     try {
         let twilio_result = await twilioClient.sendSMS(sms, process.env.RECIPIENT_PHONE, media_url);
         console.log('Twilio send success! ' + twilio_result.accountSid);
-    } catch(e) {
+    } catch (e) {
         console.log('failed to send sms');
         console.dir(e);
     }
