@@ -1,5 +1,9 @@
 const twilio = require('twilio');
-require('dotenv-json')();
+try {
+    require('dotenv-json')();
+} catch (e) {
+    // do nothing
+}
 
 
 module.exports.sendSMS = async function (msg, recipient, media_url) {
