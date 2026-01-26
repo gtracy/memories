@@ -24,6 +24,9 @@ jobs:
       - name: Run Tests
         run: npm test
 
+      - name: Create creds.json
+        run: echo '${{ secrets.GOOGLE_CREDS_JSON }}' > creds.json
+
       - name: Build Deployment Package
         run: |
           chmod +x build.sh
