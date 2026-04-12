@@ -1,14 +1,20 @@
 const twilio = require('twilio');
 try {
     require('dotenv-json')();
-} catch (e) {
+} catch (error) {
     // do nothing
 }
 
+/**
+ * Get twilio client - separated for testability
+ */
+function getClient(sid, token) {
+    return twilio(sid, token);
+}
 
-module.exports.sendSMS = async function (msg, recipient, media_url) {
+module.exports.sendSMS = async function (msg, recipient, media_url, _getClient = getClient) {
     try {
-        const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
+        const client = _getClient(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
         let msg_obj = {
             body: msg,
             to: recipient,
@@ -24,3 +30,6 @@ module.exports.sendSMS = async function (msg, recipient, media_url) {
         throw e;
     }
 };
+
+// For testing
+module.exports._getClient = getClient;

@@ -1,8 +1,6 @@
+const {google: googleapis} = require('googleapis');
 
-const {google} = require('googleapis');
-const util = require('util')
-
-const Google = function() {
+const Google = function(google = googleapis) {
     var self = this;
 
     const auth = new google.auth.GoogleAuth({

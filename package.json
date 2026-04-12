@@ -4,7 +4,9 @@
   "description": "periodic notifications that deliver notes from the past",
   "main": "app.js",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint ."
   },
   "repository": {
     "type": "git",
@@ -25,7 +27,9 @@
     "twilio": "^5.5.2"
   },
   "devDependencies": {
-    "mock-require": "^3.0.3",
-    "vitest": "^4.0.18"
+    "@vitest/coverage-v8": "^4.1.4",
+    "eslint": "^9.12.0",
+    "eslint-plugin-vitest": "^0.5.4",
+    "vitest": "^4.1.4"
   }
 }

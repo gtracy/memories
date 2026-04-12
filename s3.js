@@ -1,22 +1,24 @@
-const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
-const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-const s3Client = new S3Client({ region: "us-east-2" }); 
+const { S3Client: S3ClientLib, GetObjectCommand: GetObjectCommandLib } = require("@aws-sdk/client-s3");
+const { getSignedUrl: getSignedUrlLib } = require("@aws-sdk/s3-request-presigner");
 
-async function createPresignedUrl(objectKey) {
-    const bucketName = process.env.S3_BUCKET;
+try {
+    require('dotenv-json')();
+} catch (error) {
+    // do nothing
+}
+
+const createPresignedUrl = async (objectKey, S3Client = S3ClientLib, GetObjectCommand = GetObjectCommandLib, getSignedUrl = getSignedUrlLib) => {
+    const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-2' });
+
     const command = new GetObjectCommand({
-        Bucket: bucketName,
+        Bucket: process.env.S3_BUCKET,
         Key: objectKey,
     });
 
-    // Set the expiration time for the signed URL
-    const expiresIn = 60 * 60; // A signed URL is valid for 1 hour
-
     try {
-        const signedUrl = await getSignedUrl(s3Client, command, { expiresIn });
+        const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
         return signedUrl;
     } catch (err) {
-        console.error("Error creating signed URL", err);
         throw err;
     }
 }

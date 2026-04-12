@@ -1,42 +1,37 @@
-
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import mock from 'mock-require';
-
-// Mocks
-const mockGet = vi.fn();
-const mockGetClient = vi.fn();
-const mockAuthClient = {
-    getClient: mockGetClient
-};
-const mockSheets = {
-    spreadsheets: {
-        values: {
-            get: mockGet
-        }
-    }
-};
-
-const mockGoogleApis = {
-    google: {
-        auth: {
-            // Fix: Use standard function for constructor
-            GoogleAuth: vi.fn(function () { return mockAuthClient; })
-        },
-        sheets: vi.fn(() => mockSheets)
-    }
-};
-
-mock('googleapis', mockGoogleApis);
-mock('dotenv-json', () => { }); // Mock dotenv-json
 
 const Google = require('../../google');
 
 describe('google.js', () => {
     let googleService;
+    let mockSheets;
+    let mockAuthClient;
+    let mockGet;
+    let mockGoogle;
 
     beforeEach(() => {
         vi.clearAllMocks();
-        googleService = new Google();
+        
+        mockAuthClient = {
+            getClient: vi.fn().mockResolvedValue({})
+        };
+        mockSheets = {
+            spreadsheets: {
+                values: {
+                    get: vi.fn()
+                }
+            }
+        };
+        mockGet = mockSheets.spreadsheets.values.get;
+        
+        mockGoogle = {
+            auth: {
+                GoogleAuth: vi.fn(function() { return mockAuthClient; })
+            },
+            sheets: vi.fn(() => mockSheets)
+        };
+        
+        googleService = new Google(mockGoogle);
     });
 
     afterEach(() => {
@@ -44,9 +39,11 @@ describe('google.js', () => {
     });
 
     it('should initialize auth client', async () => {
-        mockGetClient.mockResolvedValue('client');
+        const mockClient = 'client';
+        mockAuthClient.getClient.mockResolvedValue(mockClient);
         await googleService.init();
-        expect(mockGetClient).toHaveBeenCalled();
+        expect(mockAuthClient.getClient).toHaveBeenCalled();
+        expect(googleService.oauth2Client).toBe(mockClient);
     });
 
     it('should fetch sheet data', async () => {

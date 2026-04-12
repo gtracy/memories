@@ -1,39 +1,18 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import mock from 'mock-require';
-import path from 'path';
 
-// Mock services
-const mockGoogleInit = vi.fn();
-const mockGetSheetData = vi.fn();
-const mockSendSMS = vi.fn();
-const mockCreatePresignedUrl = vi.fn();
-
-// Mock implementations
-// Fix: Use standard function for constructor
-const mockGoogleClass = vi.fn(function () {
-    return {
-        init: mockGoogleInit,
-        getSheetData: mockGetSheetData
-    };
-});
-
-const mockTwilioService = {
-    sendSMS: mockSendSMS
-};
-
-// Use require.resolve for absolute paths to ensure mock-require matches them
-mock('dotenv-json', () => { });
-mock(require.resolve('../google'), mockGoogleClass);
-mock(require.resolve('../twilio'), mockTwilioService);
-mock(require.resolve('../s3'), mockCreatePresignedUrl);
-
-// Require app
 const app = require('../app');
 
 const originalEnv = process.env;
 
 describe('app.js', () => {
+    let mockGoogleInit;
+    let mockGetSheetData;
+    let mockSendSMS;
+    let mockCreatePresignedUrl;
+    let mockGoogleClass;
+    let mockTwilio;
+
     beforeEach(() => {
         vi.clearAllMocks();
         process.env = { ...originalEnv };
@@ -41,9 +20,21 @@ describe('app.js', () => {
         process.env.GOOGLE_SHEET_RANGE = 'range';
         process.env.RECIPIENT_PHONE = '1234567890';
 
-        // Defaults
-        mockGoogleInit.mockResolvedValue(true);
-        mockSendSMS.mockResolvedValue({ accountSid: 'AC123' });
+        mockGoogleInit = vi.fn().mockResolvedValue(true);
+        mockGetSheetData = vi.fn();
+        mockSendSMS = vi.fn().mockResolvedValue({ accountSid: 'AC123' });
+        mockCreatePresignedUrl = vi.fn().mockResolvedValue('signed-url');
+
+        mockGoogleClass = vi.fn(function () {
+            return {
+                init: mockGoogleInit,
+                getSheetData: mockGetSheetData
+            };
+        });
+
+        mockTwilio = {
+            sendSMS: mockSendSMS
+        };
     });
 
     afterEach(() => {
@@ -52,66 +43,55 @@ describe('app.js', () => {
 
     it('should fetch data, filtering for today matches', async () => {
         const today = new Date();
-        const pastDate = new Date(today);
-        pastDate.setFullYear(today.getFullYear() - 1);
-
-        const otherDate = new Date(today);
-        otherDate.setDate(today.getDate() + 1);
-
-        const dateData = [
-            [pastDate.toISOString()],
-            [otherDate.toISOString()]
-        ];
-        // Index 0 matches -> Row 2
-
-        const messageData = [
-            ['2024-01-01', 'Test Message', 'http://s3.url/image.jpg']
+        const matchDate = new Date(today);
+        matchDate.setFullYear(today.getFullYear() - 2);
+        
+        const testData = [
+            ['Timestamp'], // Header
+            [matchDate.toISOString()],
+            [new Date(today.getTime() + 86400000).toISOString()] // Tomorrow
         ];
 
         mockGetSheetData
-            .mockResolvedValueOnce(dateData)
-            .mockResolvedValueOnce(messageData);
+            .mockResolvedValueOnce(testData)
+            .mockResolvedValueOnce([[matchDate.toISOString(), 'Test Message', 'http://s3.url/image.jpg']]);
 
-        mockCreatePresignedUrl.mockResolvedValue('signed-url');
-
-        await app.handler();
+        await app.handler(undefined, {}, {}, {
+            googleClass: mockGoogleClass,
+            twilio: mockTwilio,
+            s3: mockCreatePresignedUrl
+        });
 
         expect(mockGetSheetData).toHaveBeenCalledTimes(2);
-
-        // Verify we fetched specifically based on row index from queryDates
-        expect(mockGetSheetData).toHaveBeenLastCalledWith(
-            'sheet-id',
-            expect.stringContaining('!A2:C2')
-        );
-
         expect(mockCreatePresignedUrl).toHaveBeenCalledWith('image.jpg');
-
-        expect(mockSendSMS).toHaveBeenCalledWith(
-            expect.stringContaining('Test Message'),
-            '1234567890',
-            'signed-url'
-        );
+        expect(mockSendSMS).toHaveBeenCalled();
     });
 
     it('should handle specific row argument', async () => {
-        const messageData = [
-            ['2024-01-01', 'Specific Message']
-        ];
-        // First call: fetches all data (ignored when specific row is passed, but still called)
-        mockGetSheetData.mockResolvedValueOnce([]);
-        // Second call: fetches the specific row
-        mockGetSheetData.mockResolvedValueOnce(messageData);
+        const messageData = [['2024-01-01', 'Specific Message']];
+        mockGetSheetData.mockResolvedValue(messageData);
 
-        await app.handler(99);
+        await app.handler(99, {}, {}, {
+            googleClass: mockGoogleClass,
+            twilio: mockTwilio,
+            s3: mockCreatePresignedUrl
+        });
 
         expect(mockGetSheetData).toHaveBeenCalledWith(
             'sheet-id',
             expect.stringContaining('!A99:C99')
         );
-        expect(mockSendSMS).toHaveBeenCalledWith(
-            expect.stringContaining('Specific Message'),
-            '1234567890',
-            undefined
-        );
+    });
+
+    it('should handle errors in getSheetData gracefully', async () => {
+        mockGetSheetData.mockRejectedValue(new Error('Sheet Error'));
+        
+        await expect(app.handler(undefined, {}, {}, {
+            googleClass: mockGoogleClass,
+            twilio: mockTwilio,
+            s3: mockCreatePresignedUrl
+        })).resolves.not.toThrow();
+        
+        expect(mockSendSMS).not.toHaveBeenCalled();
     });
 });

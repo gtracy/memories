@@ -1,40 +1,31 @@
-
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import mock from 'mock-require';
 
-// Define mocks
-const mockCreate = vi.fn();
-const mockClient = {
-    messages: {
-        create: mockCreate
-    }
-};
-const mockTwilioConstructor = vi.fn(() => mockClient);
-
-// Register mock
-mock('dotenv-json', () => { });
-mock('twilio', mockTwilioConstructor);
-
-// Require the service (this will use the mock)
-// Note: We need to use require() here, not import
 const twilioService = require('../../twilio');
 
 describe('twilio.js', () => {
+    let mockClient;
+    let mockCreate;
+    let mockGetClient;
+
     beforeEach(() => {
         vi.clearAllMocks();
+        mockCreate = vi.fn().mockResolvedValue({ accountSid: 'AC123' });
+        mockClient = {
+            messages: {
+                create: mockCreate
+            }
+        };
+        mockGetClient = vi.fn(() => mockClient);
+
         process.env.TWILIO_SID = 'AC123';
         process.env.TWILIO_TOKEN = 'token';
         process.env.TWILIO_NUMBER = '1234567890';
-        mockCreate.mockResolvedValue({ accountSid: 'AC123' });
-    });
-
-    afterEach(() => {
-        // Optional: verify mock was called
     });
 
     it('should send SMS without media', async () => {
-        const result = await twilioService.sendSMS('test message', '0987654321');
+        const result = await twilioService.sendSMS('test message', '0987654321', undefined, mockGetClient);
 
+        expect(mockGetClient).toHaveBeenCalledWith('AC123', 'token');
         expect(mockCreate).toHaveBeenCalledWith({
             body: 'test message',
             to: '0987654321',
@@ -45,7 +36,7 @@ describe('twilio.js', () => {
 
     it('should send SMS with media', async () => {
         const mediaUrl = 'http://example.com/image.jpg';
-        await twilioService.sendSMS('test message', '0987654321', mediaUrl);
+        await twilioService.sendSMS('test message', '0987654321', mediaUrl, mockGetClient);
 
         expect(mockCreate).toHaveBeenCalledWith({
             body: 'test message',
@@ -59,6 +50,6 @@ describe('twilio.js', () => {
         const error = new Error('Twilio Error');
         mockCreate.mockRejectedValue(error);
 
-        await expect(twilioService.sendSMS('msg', '123')).rejects.toThrow('Twilio Error');
+        await expect(twilioService.sendSMS('msg', '123', undefined, mockGetClient)).rejects.toThrow('Twilio Error');
     });
 });

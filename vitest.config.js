@@ -14,5 +14,16 @@ export default defineConfig({
     test: {
         globals: true,
         environment: 'node',
+        pool: 'forks',
+        coverage: {
+            provider: 'v8',
+            reporter: ['text', 'json', 'html'],
+            exclude: [
+                'node_modules/',
+                'tests/',
+                '__mocks__/',
+                'vitest.config.js',
+            ],
+        },
     },
 });

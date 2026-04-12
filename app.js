@@ -2,7 +2,7 @@
 
 try {
     require('dotenv-json')();
-} catch (e) {
+} catch (error) {
     // do nothing
 }
 const createPresignedUrl = require('./s3');
@@ -37,11 +37,11 @@ const queryDates = (data) => {
 }
 
 // Fetch specific message
-exports.handler = async (sheet_row, event, context) => {
+exports.handler = async (sheet_row, event, context, { googleClass = Google, twilio = twilioClient, s3 = createPresignedUrl } = {}) => {
 
     // setup a google api client
-    const google = new Google();
-    const response = await google.init();
+    const google = new googleClass();
+    await google.init();
 
     // fetch the memory dates from the sheet
     console.log('ok, ready. go get the data sheet');
@@ -66,6 +66,11 @@ exports.handler = async (sheet_row, event, context) => {
         console.error(e);
     }
 
+    if (!message_data || !message_data[0]) {
+        console.log('no message data found');
+        return;
+    }
+
     // assemble the message details
     const message = message_data[0][1];
     const year = new Date(message_data[0][0]).getFullYear();
@@ -78,13 +83,13 @@ exports.handler = async (sheet_row, event, context) => {
         const media_cell = message_data[0][2];
         const objectKey = media_cell.substring(media_cell.lastIndexOf('/') + 1);
         console.log('objectKey -> ' + objectKey);
-        media_url = await createPresignedUrl(objectKey);
+        media_url = await s3(objectKey);
     }
     console.log('media -> ' + media_url);
 
     // send out the message via SMS
     try {
-        let twilio_result = await twilioClient.sendSMS(sms, process.env.RECIPIENT_PHONE, media_url);
+        let twilio_result = await twilio.sendSMS(sms, process.env.RECIPIENT_PHONE, media_url);
         console.log('Twilio send success! ' + twilio_result.accountSid);
     } catch (e) {
         console.log('failed to send sms');

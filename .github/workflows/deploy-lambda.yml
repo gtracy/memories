@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - '*'
+  workflow_dispatch:
+    inputs:
+      alias:
+        description: 'Lambda alias to create/update (e.g., prod, dev)'
+        required: true
+        default: 'manual'
 
 jobs:
   deploy:
@@ -49,7 +55,7 @@ jobs:
             --s3-bucket lambda-func-deploys \
             --s3-key memories/function.zip
 
-      - name: Publish Version and Tag
+      - name: Publish Version and Alias
         run: |
           # Wait for update verification (Lambda allows eventually consistent updates, but update-function-code is usually synchronous enough for publish)
           sleep 10
@@ -58,9 +64,15 @@ jobs:
           VERSION=$(aws lambda publish-version --function-name memories --query 'Version' --output text)
           echo "Published Version: $VERSION"
           
-          TAG_NAME=${{ github.ref_name }}
-          echo "Aliasing version $VERSION with tag $TAG_NAME"
+          # Use input alias if manual trigger, otherwise use tag name
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            ALIAS_NAME="${{ github.event.inputs.alias }}"
+          else
+            ALIAS_NAME="${{ github.ref_name }}"
+          fi
+          
+          echo "Aliasing version $VERSION with alias $ALIAS_NAME"
           
           # Create alias, or update if it exists (though tags are usually immutable in git, re-running might happen)
-          aws lambda create-alias --function-name memories --name $TAG_NAME --function-version $VERSION || \
-          aws lambda update-alias --function-name memories --name $TAG_NAME --function-version $VERSION
+          aws lambda create-alias --function-name memories --name "$ALIAS_NAME" --function-version "$VERSION" || \
+          aws lambda update-alias --function-name memories --name "$ALIAS_NAME" --function-version "$VERSION"
